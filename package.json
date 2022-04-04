@@ -1,0 +1,27 @@
+{
+  "name": "streamtoyt",
+  "version": "0.1.0",
+  "description": "Inclusão do projeto de Transmissão de vídeo para o Youtube usando Javascript para o Youtube",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "dev:debug": "DEBUG=engine,socket.io* nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcelleza8/StreamToYT.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/marcelleza8/StreamToYT/issues"
+  },
+  "homepage": "https://github.com/marcelleza8/StreamToYT#readme",
+  "dependencies": {
+    "express": "^4.17.3",
+    "nodemon": "^2.0.15",
+    "socket.io": "^4.4.1"
+  }
+}

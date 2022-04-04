@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.socket.io/4.4.1/socket.io.min.js"
+      integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H"
+      crossorigin="anonymous"
+    ></script>
+    <script src="js/main.js"></script>
+    <script>
+      //DOMContentLoaded
+      document.addEventListener("zzz", () => {
+        document
+          .querySelector('[data-action="goLive"]')
+          .addEventListener("click", e => {
+            FB.ui(
+              {
+                display: "popup",
+                method: "live_broadcast",
+                phase: "create",
+              },
+              createRes => {
+                console.log(createRes);
+                let mediaRecorder;
+                let mediaStream;
+
+                const ws = new WebSocket(
+                  window.location.protocol.replace("http", "ws") +
+                    "//" + // http: => ws:, https: -> wss:
+                    window.location.host +
+                    "/rtmp/" +
+                    encodeURIComponent(createRes.stream_url)
+                );
+
+                ws.addEventListener("open", e => {
+                  console.log("WebSocket Open", e);
+                  mediaStream = document
+                    .querySelector("canvas")
+                    .captureStream(30); // 30 FPS
+                  mediaRecorder = new MediaRecorder(mediaStream, {
+                    mimeType: "video/webm;codecs=h264",
+                    videoBitsPerSecond: 3000000,
+                  });
+
+                  mediaRecorder.addEventListener("dataavailable", e => {
+                    ws.send(e.data);
+                  });
+
+                  mediaRecorder.addEventListener("stop", ws.close.bind(ws));
+
+                  mediaRecorder.start(1000); // Start recording, and dump data every second
+                });
+
+                ws.addEventListener("close", e => {
+                  console.log("WebSocket Close", e);
+                  mediaRecorder.stop();
+                });
+              }
+            );
+          });
+      });
+    </script>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <h3 class="text-center" id="msg-status">Transmissão</h3>
+          <span class="badge badge-default">Status</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-4">
+          <div class="row">
+            <div class="col-12">
+              <div class="card mb-2">
+                <div class="card-title text-center">
+                  <h3>Capturar vídeo</h3>
+                </div>
+                <div class="card-body">
+                  <button
+                    type="button"
+                    id="iniciarCaptura"
+                    class="btn btn-outline-danger btn-block btn-sm"
+                  >
+                    Capturar
+                  </button>
+                  <button
+                    type="button"
+                    id="terminarCaptura"
+                    class="btn btn-outline-primary btn-block btn-sm"
+                  >
+                    Parar
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body">
+                  <h3>Transmissão RTMP</h3>
+                  <button
+                    type="button"
+                    id="iniciarTransmissao"
+                    class="btn btn-success btn-block"
+                  >
+                    Iniciar
+                  </button>
+                  <button
+                    type="button"
+                    id="terminarTransmissao"
+                    class="btn btn-outline-info btn-block"
+                  >
+                    Parar
+                  </button>
+                  <div class="card">
+                    <div class="card-body">
+                      <input
+                        type="text"
+                        id="streamLink"
+                        placeholder="link da plataforma"
+                        class="form-control mt-3"
+                      />
+                      <input
+                        type="text"
+                        id="streamKey"
+                        placeholder="Chave do stream da plataforma"
+                        class="form-control mt-3"
+                      />
+                      <div class="card-footer">
+                        <button
+                          class="btn btn-success btn-sm"
+                          id="send-stream-link"
+                        >
+                          Enviar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <ul class="mt-4" id="logs"></ul>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <video id="video" class="video w-100" autoplay></video>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
